@@ -5,26 +5,51 @@ import { isNil } from './utils';
 
 export class NopeString extends NopePrimitive<string> {
   protected _type = 'string';
+  protected transformed = '';
 
-  public validate(entry?: any, context?: Record<string, unknown>): string | undefined {
-    const value = !!entry ? String(entry) : entry;
-
-    return super.validate(value, context);
+  // ################
+  // shared methods
+  // ################
+  protected isEmpty(entry: string | Nil): boolean {
+    return isNil(entry) || entry?.trim().length === 0;
   }
 
-  public validateAsync(
-    entry?: any,
-    context?: Record<string, unknown>,
-  ): Promise<string | undefined> {
-    const value = !!entry ? String(entry) : entry;
-
-    return super.validateAsync(value, context);
+  public validate(entry: string, context?: Record<string, unknown>) {
+    // TODO: Set return type
+    return super.validate(entry, context);
   }
 
-  protected isEmpty(value: string | Nil): boolean {
-    return isNil(value) || value.trim().length === 0;
+  // ################
+  // transforms
+  // ################
+  public trim(): this {
+    const rule = () => {
+      this.transformed = this.transformed.trim();
+      return;
+    };
+
+    return this.test(rule);
   }
 
+  public toUpperCase(): this {
+    const rule = () => {
+      this.transformed = this.transformed?.toUpperCase();
+      return;
+    };
+    return this.test(rule);
+  }
+
+  public toLowerCase(): this {
+    const rule = () => {
+      this.transformed = this.transformed?.toLowerCase();
+      return;
+    };
+    return this.test(rule);
+  }
+
+  // ################
+  // hooks
+  // ################
   public regex(regex: RegExp, message = "Doesn't satisfy the rule"): this {
     const rule: Rule<string> = (entry) => {
       if (this.isEmpty(entry)) {
@@ -127,6 +152,7 @@ export class NopeString extends NopePrimitive<string> {
   ) {
     if (startLength && endLength && startLength > endLength) {
       const rule: Rule<any> = () => {
+        // TODO: It could be a custom error
         throw Error(
           'between must receive an initial length (startLength) smaller than the final length (endLength) parameter',
         );
@@ -141,7 +167,7 @@ export class NopeString extends NopePrimitive<string> {
     return this;
   }
 
-  public exactLength(length: number, message = `Must be at exactly of length ${length}`) {
+  public exactLength(length: number, message = `Must be at exactly of length ${length}`): this {
     const rule: Rule<string> = (entry) => {
       if (this.isEmpty(entry)) {
         return;
@@ -156,12 +182,5 @@ export class NopeString extends NopePrimitive<string> {
     return this.test(rule);
   }
 
-  public trim() {
-    const rule: Rule<string> = (entry): any => {
-      this._entry = (entry as string).trim();
-      return;
-    };
-
-    return this.test(rule);
-  }
+  // TODO: Add default method
 }

@@ -1,239 +1,448 @@
 import Nope from '..';
-import { validateSyncAndAsync } from './utils';
 
 describe('#NopeNumber', () => {
-  describe('#min', () => {
-    it('(alias for greaterThan) should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().min(3, 'minLengthErrorMessage'),
-        undefined,
-        undefined,
-      );
+  describe('[transformers]', () => {
+    it('[round] should round(floor) the number', () => {
+      const schema = Nope.number().round('floor');
+
+      for (const { value, expected } of [
+        { value: 10, expected: 10 },
+        { value: 10.5, expected: 10 },
+        { value: 10.4, expected: 10 },
+        { value: 10.55, expected: 10 },
+        { value: 45.95, expected: 45 },
+        { value: -45.95, expected: -46 },
+      ]) {
+        const { data, transformed, errors } = schema.validate(value);
+        expect(data).toBe(value);
+        expect(transformed).toBe(expected);
+        expect(errors).toHaveLength(0);
+      }
     });
 
-    it('(alias for greaterThan) should return an error message for an entry smaller than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().min(5, 'tooSmall'), 2, 'tooSmall');
+    it('[round] should round(ceil) the number', () => {
+      const schema = Nope.number().round('ceil');
+
+      for (const { value, expected } of [
+        { value: 10, expected: 10 },
+        { value: 10.5, expected: 11 },
+        { value: 10.4, expected: 11 },
+        { value: 10.55, expected: 11 },
+        { value: 45.95, expected: 46 },
+        { value: -45.95, expected: -45 },
+      ]) {
+        const { data, transformed, errors } = schema.validate(value);
+        expect(data).toBe(value);
+        expect(transformed).toBe(expected);
+        expect(errors).toHaveLength(0);
+      }
     });
 
-    it('(alias for greaterThan) should return an error message for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().min(3, 'tooSmall'), 3, 'tooSmall');
+    it('[round] should round(trunc) the number', () => {
+      const schema = Nope.number().round('trunc');
+
+      for (const { value, expected } of [
+        { value: 10, expected: 10 },
+        { value: 10.5, expected: 10 },
+        { value: 10.4, expected: 10 },
+        { value: 10.55, expected: 10 },
+        { value: 45.95, expected: 45 },
+        { value: -45.95, expected: -45 },
+      ]) {
+        const { data, transformed, errors } = schema.validate(value);
+        expect(data).toBe(value);
+        expect(transformed).toBe(expected);
+        expect(errors).toHaveLength(0);
+      }
     });
 
-    it('(alias for greaterThan) should return undefined for an entry greater than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().min(5, 'minLengthErrorMessage'), 6, undefined);
+    it('[round] should round(round) the number', () => {
+      const schema = Nope.number().round('round');
+
+      for (const { value, expected } of [
+        { value: 10, expected: 10 },
+        { value: 10.5, expected: 11 },
+        { value: 10.4, expected: 10 },
+        { value: 10.55, expected: 11 },
+        { value: 45.95, expected: 46 },
+        { value: -45.95, expected: -46 },
+      ]) {
+        const { data, transformed, errors } = schema.validate(value);
+        expect(data).toBe(value);
+        expect(transformed).toBe(expected);
+        expect(errors).toHaveLength(0);
+      }
     });
   });
 
-  describe('#max', () => {
-    it('(alias for lessThan) should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().max(5, 'maxLengthErrorMessage'),
-        undefined,
-        undefined,
-      );
+  describe('[hooks]', () => {
+    it('[min] (alias for greaterThan) should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().min(3, 'min-length-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
     });
 
-    it('(alias for lessThan) should return an error message for an entry greater than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().max(5, 'tooLarge'), 7, 'tooLarge');
+    it('[min] (alias for greaterThan) should return an error message for an entry smaller than the threshold', () => {
+      const schema = Nope.number().min(5, 'min-length-error-message');
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('min-length-error-message');
     });
 
-    it('(alias for lessThan) should return an error message for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().max(4, 'maxLength'), 4, 'maxLength');
+    it('[min] (alias for greaterThan) should return an error message for an entry equal to the threshold', () => {
+      const schema = Nope.number().min(3);
+      const { data, transformed, errors } = schema.validate(3);
+      expect(data).toBe(3);
+      expect(transformed).toBe(3);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('Input is too small');
     });
 
-    it('(alias for lessThan) should return undefined for an entry smaller than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().max(5, 'maxLength'), 2, undefined);
-    });
-  });
-
-  describe('#greaterThan', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().greaterThan(5, 'greaterThanErrorMessage'),
-        undefined,
-        undefined,
-      );
+    it('[min] (alias for greaterThan) should return an empty errors array for an entry greater than the threshold', () => {
+      const schema = Nope.number().min(5, 'min-length-error-message');
+      const { data, transformed, errors } = schema.validate(6);
+      expect(data).toBe(6);
+      expect(transformed).toBe(6);
+      expect(errors).toHaveLength(0);
     });
 
-    it('should return an error message for an entry smaller than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().greaterThan(5, 'tooSmall'), 2, 'tooSmall');
+    it('[max] (alias for lessThan) should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().max(5, 'max-length-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
     });
 
-    it('should return an error message for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().greaterThan(3, 'tooSmall'), 3, 'tooSmall');
+    it('[max] (alias for lessThan) should return an error message for an entry greater than the threshold', () => {
+      const schema = Nope.number().max(5, 'max-length-error-message');
+      const { data, transformed, errors } = schema.validate(7);
+      expect(data).toBe(7);
+      expect(transformed).toBe(7);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('max-length-error-message');
     });
 
-    it('should return undefined for an entry greater than the threshold', async () => {
-      await validateSyncAndAsync(
-        Nope.number().greaterThan(5, 'greaterThanErrorMessage'),
+    it('[max] (alias for lessThan) should return an error message for an entry equal to the threshold', () => {
+      const schema = Nope.number().max(4);
+      const { data, transformed, errors } = schema.validate(4);
+      expect(data).toBe(4);
+      expect(transformed).toBe(4);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('Input is too large');
+    });
+
+    it('[max] (alias for lessThan) should return an empty errors array for an entry smaller than the threshold', () => {
+      const schema = Nope.number().max(5);
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[greaterThan] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().greaterThan(5, 'greater-than-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[greaterThan] should return an error message for an entry smaller than the threshold', () => {
+      const schema = Nope.number().greaterThan(5, 'greater-than-error-message');
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('greater-than-error-message');
+    });
+
+    it('[greaterThan] should return an error message for an entry equal to the threshold', () => {
+      const schema = Nope.number().greaterThan(3);
+      const { data, transformed, errors } = schema.validate(3);
+      expect(data).toBe(3);
+      expect(transformed).toBe(3);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('Input is too small');
+    });
+
+    it('[greaterThan] should return an empty errors array for an entry greater than the threshold', () => {
+      const schema = Nope.number().greaterThan(5, 'greater-than-error-message');
+      const { data, transformed, errors } = schema.validate(6);
+      expect(data).toBe(6);
+      expect(transformed).toBe(6);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[lessThan] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().lessThan(5, 'less-than-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[lessThan] should return an error message for an entry greater than the threshold', () => {
+      const schema = Nope.number().lessThan(5, 'less-than-error-message');
+      const { data, transformed, errors } = schema.validate(7);
+      expect(data).toBe(7);
+      expect(transformed).toBe(7);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('less-than-error-message');
+    });
+
+    it('[lessThan] should return an error message for an entry equal to the threshold', () => {
+      const schema = Nope.number().lessThan(4);
+      const { data, transformed, errors } = schema.validate(6);
+      expect(data).toBe(6);
+      expect(transformed).toBe(6);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('Input is too large');
+    });
+
+    it('[lessThan] should return an empty errors array for an entry smaller than the threshold', () => {
+      const schema = Nope.number().lessThan(5);
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atLeast] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().atLeast(5, 'at-least-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atLeast] should return an error message for an entry smaller than the the threshold', () => {
+      const schema = Nope.number().atLeast(5, 'at-least-error-message');
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('at-least-error-message');
+    });
+
+    it('[atLeast] should return an empty errors array for an entry equal to the threshold', () => {
+      const schema = Nope.number().atLeast(3);
+      const { data, transformed, errors } = schema.validate(3);
+      expect(data).toBe(3);
+      expect(transformed).toBe(3);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atLeast] should return an empty errors array for an entry greater than the threshold', () => {
+      const schema = Nope.number().atLeast(5, 'at-least-error-message');
+      const { data, transformed, errors } = schema.validate(6);
+      expect(data).toBe(6);
+      expect(transformed).toBe(6);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atMost] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().atMost(5, 'at-most-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atMost] should return an error message for an entry greater than the theshold', () => {
+      const schema = Nope.number().atMost(5, 'at-most-error-message');
+      const { data, transformed, errors } = schema.validate(7);
+      expect(data).toBe(7);
+      expect(transformed).toBe(7);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('at-most-error-message');
+    });
+
+    it('[atMost] should return an empty errors array for an entry equal to the threshold', () => {
+      const schema = Nope.number().atMost(10);
+      const { data, transformed, errors } = schema.validate(10);
+      expect(data).toBe(10);
+      expect(transformed).toBe(10);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[atMost] should return an empty errors array for an entry smaller than the threshold', () => {
+      const schema = Nope.number().atMost(5);
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[between] should return an error message for an entry smaller than the the threshold', () => {
+      const schema = Nope.number().between(5, 10, 'between-error-message');
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('between-error-message');
+    });
+
+    it('[between] should return an empty errors array for an entry equal (startSize) to the threshold', () => {
+      const schema = Nope.number().between(3, 10, 'between-error-message');
+      const { data, transformed, errors } = schema.validate(3);
+      expect(data).toBe(3);
+      expect(transformed).toBe(3);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[between] should return an error message for an entry greater than the theshold', () => {
+      const schema = Nope.number().between(
+        5,
         6,
-        undefined,
+        'too-small-error-message',
+        'too-large-error-message',
       );
-    });
-  });
-
-  describe('#lessThan', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().lessThan(5, 'lessThanErrorMessage'),
-        undefined,
-        undefined,
-      );
+      const { data, transformed, errors } = schema.validate(7);
+      expect(data).toBe(7);
+      expect(transformed).toBe(7);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('too-large-error-message');
     });
 
-    it('should return an error message for an entry greater than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().lessThan(5, 'tooLarge'), 7, 'tooLarge');
+    it('[between] should return an empty errors array for an entry equal (endSize) to the threshold', () => {
+      const schema = Nope.number().between(10, 15, 'between-error-message');
+      const { data, transformed, errors } = schema.validate(10);
+      expect(data).toBe(10);
+      expect(transformed).toBe(10);
+      expect(errors).toHaveLength(0);
     });
 
-    it('should return an error message for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().lessThan(4, 'tooLarge'), 6, 'tooLarge');
-    });
-
-    it('should return undefined for an entry smaller than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().lessThan(5, 'lessThanErrorMessage'), 2, undefined);
-    });
-  });
-
-  describe('#atLeast', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().atLeast(5, 'atLeastErrorMessage'),
-        undefined,
-        undefined,
-      );
-    });
-
-    it('should return an error message for an entry smaller than the the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().atLeast(5, 'tooSmall'), 2, 'tooSmall');
-    });
-
-    it('should return undefined for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().atLeast(3, 'atLeastErrorMessage'), 3, undefined);
-    });
-
-    it('should return undefined for an entry greater than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().atLeast(5, 'atLeastErrorMessage'), 6, undefined);
-    });
-  });
-
-  describe('#atMost', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number().atMost(5, 'atMostErrorMessage'),
-        undefined,
-        undefined,
-      );
-    });
-
-    it('should return an error message for an entry greater than the theshold', async () => {
-      await validateSyncAndAsync(Nope.number().atMost(5, 'tooLarge'), 7, 'tooLarge');
-    });
-
-    it('should return undefined for an entry equal to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().atMost(10, 'atMostErrorMessage'), 10, undefined);
-    });
-
-    it('should return undefined for an entry smaller than the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().atMost(5, 'atMostErrorMessage'), 2, undefined);
-    });
-  });
-
-  describe('#between', () => {
-    it('should return an error message for an entry smaller than the the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().between(5, 10), 2, 'Input is too small');
-    });
-
-    it('should return undefined for an entry equal (startSize) to the threshold', async () => {
-      await validateSyncAndAsync(Nope.number().between(3, 10, 'atLeastErrorMessage'), 3, undefined);
-    });
-
-    it('should return an error message for an entry greater than the theshold', async () => {
-      await validateSyncAndAsync(
-        Nope.number().between(5, 6, 'tooSmall', 'tooLarge'),
-        7,
-        'tooLarge',
-      );
-    });
-
-    it('should return undefined for an entry equal (endSize) to the threshold', async () => {
-      await validateSyncAndAsync(
-        Nope.number().between(10, 15, 'atMostErrorMessage'),
+    it('[between] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().between(
+        5,
         10,
-        undefined,
+        'at-least-error-message',
+        'at-most-error-message',
       );
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
     });
 
-    it('should return undefined for an empty entry', async () => {
-      const schema = Nope.number().between(5, 10, 'atLeastErrorMessage', 'atMostErrorMessage');
-      await validateSyncAndAsync(schema, undefined, undefined);
-    });
-
-    it('should throw an error if used wrongly', () => {
+    it('[between] should throw an error if used wrongly', () => {
       const schema = Nope.number().between(5, 1);
-
-      expect(() => {
-        schema.validate(0);
-      }).toThrowError();
-    });
-  });
-
-  describe('#positive', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(Nope.number().positive(), undefined, undefined);
-    });
-
-    it('should return an error message for an entry negative', async () => {
-      await validateSyncAndAsync(Nope.number().positive('mustBePositive'), -1, 'mustBePositive');
-    });
-
-    it('should return undefined for an entry positive', async () => {
-      await validateSyncAndAsync(Nope.number().positive('positiveErrorMessage'), 2, undefined);
-    });
-  });
-
-  describe('#negative', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(Nope.number().negative(), undefined, undefined);
-    });
-
-    it('should return an error message for an entry negative', async () => {
-      await validateSyncAndAsync(Nope.number().negative('mustBeNegative'), 1, 'mustBeNegative');
-    });
-
-    it('should return undefined for an entry negative', async () => {
-      await validateSyncAndAsync(Nope.number().negative('negativeErrorMessage'), -1, undefined);
-    });
-  });
-
-  describe('#integer', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(Nope.number().integer(), undefined, undefined);
-    });
-
-    it('should return an error message for an entry not an integer', async () => {
-      await validateSyncAndAsync(Nope.number().integer('mustBeInteger'), 3.14, 'mustBeInteger');
-    });
-
-    it('should return undefined for an entry an integer', async () => {
-      await validateSyncAndAsync(Nope.number().integer('integerErrorMessage'), 1, undefined);
-    });
-  });
-
-  describe('#number', () => {
-    it('should return undefined for an empty entry', async () => {
-      await validateSyncAndAsync(
-        Nope.number('validNumberErrorMessage').required(),
-        'integer',
-        'validNumberErrorMessage',
+      expect(() => schema.validate(2)).toThrowError(
+        'between must receive an initial size (sizeStart) smaller than the final size (sizeEnd) parameter',
       );
     });
 
-    it('should return an error message for an entry not an integer', async () => {
-      await validateSyncAndAsync(Nope.number('notValidNumber').integer(), 'one', 'notValidNumber');
+    it('[positive] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().positive();
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
     });
 
-    it('should return undefined for a string entry of an integer', async () => {
-      await validateSyncAndAsync(Nope.number().integer('integerErrorMessage'), '12', undefined);
+    it('[positive] should return an error message for an entry negative', () => {
+      const schema = Nope.number().positive('must-be-positive');
+      const { data, transformed, errors } = schema.validate(-1);
+      expect(data).toBe(-1);
+      expect(transformed).toBe(-1);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('must-be-positive');
+    });
+
+    it('[positive] should return an empty errors array for an entry positive', () => {
+      const schema = Nope.number().positive('positive-error-message');
+      const { data, transformed, errors } = schema.validate(2);
+      expect(data).toBe(2);
+      expect(transformed).toBe(2);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[negative] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().negative();
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[negative] should return an error message for an entry negative', () => {
+      const schema = Nope.number().negative('must-be-negative');
+      const { data, transformed, errors } = schema.validate(1);
+      expect(data).toBe(1);
+      expect(transformed).toBe(1);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('must-be-negative');
+    });
+
+    it('[negative] should return an empty errors array for an entry negative', () => {
+      const schema = Nope.number().negative('negative-error-message');
+      const { data, transformed, errors } = schema.validate(-1);
+      expect(data).toBe(-1);
+      expect(transformed).toBe(-1);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[integer] should return an empty errors array for an empty entry', () => {
+      const schema = Nope.number().integer();
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[integer] should return an error message for an entry not an integer', () => {
+      const schema = Nope.number().integer('must-be-integer');
+      const { data, transformed, errors } = schema.validate(3.14);
+      expect(data).toBe(3.14);
+      expect(transformed).toBe(3.14);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('must-be-integer');
+    });
+
+    it('[integer] should return an empty errors array for an entry an integer', () => {
+      const schema = Nope.number().integer('integer-error-message');
+      const { data, transformed, errors } = schema.validate(1);
+      expect(data).toBe(1);
+      expect(transformed).toBe(1);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('[integer] should throw an error for an entry not an integer', () => {
+      const schema = Nope.number().integer();
+
+      expect(() => schema.validate('one')).toThrowError('The entry is not a valid number');
+    });
+
+    it('[required] should return an error message for undefined entry', () => {
+      const schema = Nope.number().required('required-error-message');
+      const { data, transformed, errors } = schema.validate(undefined);
+      expect(data).toBeUndefined();
+      expect(transformed).toBeUndefined();
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('required-error-message');
+    });
+
+    it('[required] should return an error message for null entry', () => {
+      const schema = Nope.number().required();
+      const { data, transformed, errors } = schema.validate(null);
+      expect(data).toBe(null);
+      expect(transformed).toBe(null);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('This field is required');
+    });
+
+    it('[required] should return an error message for empty entry', () => {
+      const schema = Nope.number().required('required-error-message');
+      const { data, transformed, errors } = schema.validate('');
+      expect(data).toBe('');
+      expect(transformed).toBe('');
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe('required-error-message');
     });
   });
 });

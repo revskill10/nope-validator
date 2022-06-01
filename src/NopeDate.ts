@@ -2,49 +2,53 @@ import { NopePrimitive } from './NopePrimitive';
 import { NopeReference } from './NopeReference';
 import { Rule } from './types';
 
-type T = string | number | Date;
+type TDate = string | number | Date;
 
-export class NopeDate extends NopePrimitive<T> {
+export class NopeDate extends NopePrimitive<TDate> {
   private message: string;
   protected _type = 'object';
+  protected entry: TDate | undefined;
+  protected transformed: TDate | undefined;
 
-  public before(
-    beforeDate: T | NopeReference,
-    message = `Date must be before ${beforeDate.toString()}`,
-  ) {
-    const rule: Rule<T> = (entry, context) => {
-      if (this.isEmpty(entry)) {
-        return;
-      }
-
-      const resolvedBeforeDate =
-        beforeDate instanceof NopeReference && context ? context[beforeDate.key] : beforeDate;
-
-      if (new Date(entry as Date) >= new Date(resolvedBeforeDate)) {
-        return message;
-      }
-    };
-
-    return this.test(rule);
+  // ################
+  // shared methods
+  // ################
+  public constructor(message = 'The entry is not a valid date') {
+    super();
+    this.message = message;
   }
 
-  public after(afterDate: T | NopeReference, message = `Date must be after ${afterDate}`) {
-    const rule: Rule<T> = (entry, context) => {
-      if (this.isEmpty(entry)) {
-        return;
-      }
+  public validate(
+    entry?: any,
+    context?: Record<string | number, unknown>,
+  ): string | undefined | any {
+    try {
+      this.entry = entry;
+      this.transformed = this.parseDate(entry);
+    } catch (error) {
+      return error;
+    }
 
-      const resolvedAfterDate =
-        afterDate instanceof NopeReference && context ? context[afterDate.key] : afterDate;
-
-      if (new Date(entry as Date) <= new Date(resolvedAfterDate)) {
-        return message;
-      }
-    };
-
-    return this.test(rule);
+    return super.validateWithTransform(this.entry, this.transformed, context);
   }
+  // public validateAsync(
+  //   entry?: any,
+  //   context?: Record<string | number, unknown>,
+  // ): Promise<string | undefined | any> {
+  //   let value;
 
+  //   try {
+  //     value = this.parseDate(entry);
+  //   } catch (error) {
+  //     return Promise.resolve(error);
+  //   }
+
+  //   return super.validateAsync(value, context);
+  // }
+
+  // ################
+  // transforms
+  // ################
   private parseDate(entry?: any) {
     let value = entry;
 
@@ -65,37 +69,43 @@ export class NopeDate extends NopePrimitive<T> {
     return value;
   }
 
-  public validate(
-    entry?: any,
-    context?: Record<string | number, unknown>,
-  ): string | undefined | any {
-    let value;
+  // ################
+  // hooks
+  // ################
+  public before(
+    beforeDate: TDate | NopeReference,
+    message = `Date must be before ${beforeDate.toString()}`,
+  ) {
+    const rule: Rule<TDate> = (entry, context) => {
+      if (this.isEmpty(entry)) {
+        return;
+      }
 
-    try {
-      value = this.parseDate(entry);
-    } catch (error) {
-      return error;
-    }
+      const resolvedBeforeDate =
+        beforeDate instanceof NopeReference && context ? context[beforeDate.key] : beforeDate;
 
-    return super.validate(value, context);
-  }
-  public validateAsync(
-    entry?: any,
-    context?: Record<string | number, unknown>,
-  ): Promise<string | undefined | any> {
-    let value;
+      if (new Date(entry as Date) >= new Date(resolvedBeforeDate)) {
+        return message;
+      }
+    };
 
-    try {
-      value = this.parseDate(entry);
-    } catch (error) {
-      return Promise.resolve(error);
-    }
-
-    return super.validateAsync(value, context);
+    return this.test(rule);
   }
 
-  public constructor(message = 'The field is not a valid date') {
-    super();
-    this.message = message;
+  public after(afterDate: TDate | NopeReference, message = `Date must be after ${afterDate}`) {
+    const rule: Rule<TDate> = (entry, context) => {
+      if (this.isEmpty(entry)) {
+        return;
+      }
+
+      const resolvedAfterDate =
+        afterDate instanceof NopeReference && context ? context[afterDate.key] : afterDate;
+
+      if (new Date(entry as Date) <= new Date(resolvedAfterDate)) {
+        return message;
+      }
+    };
+
+    return this.test(rule);
   }
 }

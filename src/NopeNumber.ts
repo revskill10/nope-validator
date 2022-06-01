@@ -1,9 +1,48 @@
 import { NopePrimitive } from './NopePrimitive';
-import { Rule } from './types';
+import { Nil, Rule } from './types';
+import { isNil } from './utils';
 
 export class NopeNumber extends NopePrimitive<number> {
-  private message = 'The field is not a number';
   protected _type = 'number';
+  protected entry = Number.MIN_SAFE_INTEGER;
+  protected transformed = Number.MIN_SAFE_INTEGER;
+
+  // ################
+  // shared methods
+  // ################
+  protected isEmpty(entry: number | string | Nil): boolean {
+    // return !!(entry?.length === 0);
+
+    return isNil(entry) || (typeof entry === 'string' && entry?.trim().length === 0);
+  }
+
+  public validate(entry?: any, context?: Record<string | number, unknown>) {
+    const transformed = !!entry ? Number(entry) : entry;
+
+    if (!this.isEmpty(transformed) && Number.isNaN(transformed)) {
+      throw Error('The entry is not a valid number');
+    }
+
+    // TODO: Set return type
+    return super.validate(entry, context);
+    // return super.validateWithTransform(entry, transformed, context);
+  }
+
+  // ################
+  // transforms
+  // ################
+  public round(type: 'floor' | 'ceil' | 'trunc' | 'round' = 'round'): this {
+    const rule = () => {
+      this.transformed = Math[type](this.entry as number);
+      return;
+    };
+
+    return this.test(rule);
+  }
+
+  // ################
+  // hooks
+  // ################
 
   public integer(message = 'Input must be an integer') {
     const rule: Rule<number> = (entry) => {
@@ -117,31 +156,16 @@ export class NopeNumber extends NopePrimitive<number> {
     return this;
   }
 
-  public validate(entry?: any, context?: Record<string | number, unknown>): string | undefined {
-    const value = !!entry ? Number(entry) : entry;
+  // public validateAsync(
+  //   entry?: any,
+  //   context?: Record<string | number, unknown>,
+  // ): Promise<string | undefined> {
+  //   const value = !!entry ? Number(entry) : entry;
 
-    if (!this.isEmpty(value) && Number.isNaN(value)) {
-      return this.message;
-    }
+  //   if (!this.isEmpty(value) && Number.isNaN(value)) {
+  //     return Promise.resolve(this.message);
+  //   }
 
-    return super.validate(value, context);
-  }
-
-  public validateAsync(
-    entry?: any,
-    context?: Record<string | number, unknown>,
-  ): Promise<string | undefined> {
-    const value = !!entry ? Number(entry) : entry;
-
-    if (!this.isEmpty(value) && Number.isNaN(value)) {
-      return Promise.resolve(this.message);
-    }
-
-    return super.validateAsync(value, context);
-  }
-
-  public constructor(message = 'The field is not a valid number') {
-    super();
-    this.message = message;
-  }
+  //   return super.validateAsync(value, context);
+  // }
 }
